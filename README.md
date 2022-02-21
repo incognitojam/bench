@@ -1,18 +1,11 @@
-# sync3-test-bench
+# bench
 
-Using a [panda](https://comma.ai/shop/products/panda) from comma.ai, we can simulate the CAN messages used to wake up and talk to the Ford Sync 3 infotainment unit (APIM).
+Using a [panda](https://comma.ai/shop/products/panda) from comma.ai, we can simulate the CAN messages used to interact with different automotive infotainment systems.
 
-## Features
+## Systems
 
-- [x] Wake up the head unit
-- [x] Simulate the car speed as zero
-- [ ] come up with more ideas
-
-### Todo List
-
-- Get it to work on my own headunit...
-- Add photos to README
-- Use dbc file?
+- Ford Sync 3 infotainment unit (APIM)
+- Audi/VW/Skoda MIB
 
 ## Credits
 
