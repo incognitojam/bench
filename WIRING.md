@@ -16,6 +16,30 @@ HS4 CAN|High|Blue/Green
 
 ## Modules
 
+# Wiring colours
+
+## OBD-II Port
+
+pin|9|10|11|12|13|14|15|16
+-|-|-|-|-|-|-|-|-
+signal|||CAN2 L|CAN3 H|CAN3 L|CAN1 L|L-LIN|12VIN
+colour|Red|Purple|White|Yellow|White|White|White|[Red]
+pin|1|2|3|4|5|6|7|8
+signal|GMLAN||CAN2 H|GND||CAN1 H|K-LIN|Ignition
+colour|Blue|Green|Grey|[Black]||Orange|Orange|[?]
+
+
+## Instrument Panel Cluster (IPC)
+
+### C220
+
+Pin|Signal|Colour
+---|------|------
+3|GND|Black
+8|VBATT|Red
+12|CAN3 H|Green
+13|CAN3 L|White
+
 ### OBD-II
 
 Pin Number|Wire|Colour
