@@ -21,6 +21,26 @@ def rcm_status_message_2(packer):
   }
   return packer.make_can_msg("RCMStatusMessage2_FD1", 0, values)
 
+def body_info_data(packer, ignition=0, needle_backlight=0, backlight=16, turn_signal_right=False, turn_signal_left=False):
+  values = {
+    "Ignition": ignition,
+    "RunningLights": 0,
+    "FogLightRear": 0,
+    "DoorOpen": 0,
+    "NeedleBacklight": needle_backlight,
+    "Backlight": backlight,
+    "TurnSignalRight": 1 if turn_signal_right else 0,
+    "TurnSignalLeft": 1 if turn_signal_left else 0,
+    "FactoryMode": 0,
+    "DoorOpenRr": 0,
+    "DoorOpenRl": 0,
+    "DoorOpenDrvr": 0,
+    "DoorOpenPsngr": 0,
+    "DoorOpenLftgt": 0,
+    "FogLightFront": 0,
+  }
+  return packer.make_can_msg("BodyInfo_Data", 0, values)
+
 def body_info_3(packer):
   values = {
     "ValetMode_D_Mem": 0,
@@ -231,7 +251,23 @@ def bcm_lamp_stat(packer):
   }
   return packer.make_can_msg("BCM_Lamp_Stat_FD1", 0, values)
 
-def steering_wheel_data2(packer, ok=False, menu=False):
+def accdata_2(packer, hud_intensity=100, hud_blk3=True, hud_blk2=True, hud_blk1=True, hud_rate=1):
+  values = {
+    "CmbbBrkDecel_No_Cnt": 0,
+    "HudDsplyIntns_No_Actl": hud_intensity,
+    "HudBlk3_B_Rq": 1 if hud_blk3 else 0,
+    "HudBlk2_B_Rq": 1 if hud_blk2 else 0,
+    "HudBlk1_B_Rq": 1 if hud_blk1 else 0,
+    "HudFlashRate_D_Actl": hud_rate,
+    "CmbbBrkDecel_No_Cs": 0,
+    "CmbbBrkDecel_A_Rq": 0,
+    "CmbbBrkPrchg_D_Rq": 0,
+    "CmbbBrkDecel_B_Rq": 0,
+    "CmbbBaSens_D_Rq": 0,
+  }
+  return packer.make_can_msg("ACCDATA_2", 0, values)
+
+def steering_wheel_data2(packer, ok=False, menu=False, hud=False):
   values = {
     "SelDrvMdeSwtch_D_Stat4": 0,
     "SteWhlSwtchView_B_Stat": 0,
@@ -240,7 +276,7 @@ def steering_wheel_data2(packer, ok=False, menu=False):
     "SteWhlSwtchNav_B_Stat": 0,
     "SteWhlSwtchMed_B_Stat": 0,
     "SteWhlSwtchIod_B_Stat": 0,
-    "SteWhlSwtchHud_B_Stat": 0,
+    "SteWhlSwtchHud_B_Stat": 1 if hud else 0,
     "SteWhlSwtchBack_B_Stat": 0,
     "SteWhlSwtchMenu_B_Stat": 1 if menu else 0,
     "SteEffortInc_B_RqDrv": 0,

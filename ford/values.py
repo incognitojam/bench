@@ -1,6 +1,12 @@
 DBC_NAME = "ford_lincoln_base_pt"
-BUS = 2
 DELAY = 0.01
+
+BUS_MAP = {
+  "HS1": 0,
+  "HS2": 1,
+  "HS3": 2,
+  "HS4": 2,
+}
 
 ignored = [
   range(765, 765+1),  # cluster settings, incl. language
@@ -21,17 +27,20 @@ ignored = [
 ]
 
 bookmarked = [
+  range(76, 76 + 1),    # RCMStatusMessage2_FD1
+
   # 700
   range(765, 765 + 1),  # Mc_Send_Signals_2_FD1
 
   # 900
-  range(909, 909 + 1),  # Body_Info_6_FD1 "maximum number of keys learned"
-  # range(931, 931 + 1),  # Body_Info_9_FD1
-  # range(946, 946 + 1),  # turns on backlight and cluster display
+  range(909, 909 + 1),  # Body_Info_6_FD1
+  range(931, 931 + 1),  # Body_Info_9_FD1
+  range(946, 946 + 1),  # BodyInfo_Data
   range(947, 947 + 1),  # BodyInfo_3_FD1
   range(963, 963 + 1),  # BCM_Lamp_Stat_FD1
 
   # 1000
+  range(1060, 1060 + 1), # Powertrain_Data_4
   # range(1068, 1068 + 1),  # Battery_Mgmt_2_FD1
   # range(1076, 1076 + 1),  # Cluster_Info_3_FD1
 

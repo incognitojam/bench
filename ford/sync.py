@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import sys
 from time import sleep
 from panda import Panda
 from opendbc.can.packer import CANPacker
@@ -77,15 +76,28 @@ if __name__ == "__main__":
   p.set_safety_mode(Panda.SAFETY_ALLOUTPUT)
   p.set_heartbeat_disabled()
 
-  def send_cmd(packer, command, **kwargs):
+  def send_cmd(packer, command, bus=None, **kwargs):
     addr, _, data, _ = command(packer, **kwargs)
-    print(command.__name__, addr, data)
-    p.can_send(addr, data, BUS)
+    if bus is None:
+      sent_bus = "0, 1, 2"
+      for bus in (0, 1, 2):
+        print(bus)
+        p.can_send(addr, data, bus)
+    elif isinstance(bus, str):
+      bus = BUS_MAP[bus]
+      sent_bus = str(bus)
+      p.can_send(addr, data, bus)
+    else:
+      sent_bus = str(bus)
+      p.can_send(addr, data, bus)
+    print(f"({addr})\t{command.__name__}\t\tbus {sent_bus}:\t\t{data}")
     sleep(DELAY)
 
   def send_msg(addr, data):
     print(addr, data)
-    p.can_send(addr, data, BUS)
+    for bus in (0, 1, 2):
+      p.can_send(addr, data, bus)
+    print(f"{addr}\t sent on bus 0, 1, 2: {data}")
     sleep(DELAY)
 
   send_cmd(packer, mc_send_signals_2)
@@ -108,9 +120,10 @@ if __name__ == "__main__":
 
   print("Sending commands...")
   try:
-    datas = [0, 255, 170]
+    datas = [0, 255, 170, 132]
     # datas = [0, 255] #, 255, 136, 170, 158, 132, 140]
     step = 0
+    button_counter = 0
 
     while 1:
       # can_sends = []
@@ -145,12 +158,12 @@ if __name__ == "__main__":
       #   print(addr, data, send)
       #   sleep(0.004)
 
-      idx = 946
-      size = 1
+      idx = 1
+      size = 2000
       # idx = 0
       # size = 1600 + 1
 
-      BATCH_SIZE = 1
+      BATCH_SIZE = 250000
       count = 0
 
       data = datas[step]
@@ -162,15 +175,33 @@ if __name__ == "__main__":
       sent = []
 
 
-      def send_wakeup():
-        wake_up_addr = 1408
-        wake_up_data = b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
-        send_msg(wake_up_addr, wake_up_data)
+      # def send_wakeup():
+      #   wake_up_addr = 1408
+      #   wake_up_data = b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
+      #   send_msg(wake_up_addr, wake_up_data)
+
+      def send_bdycm():
+        send_cmd(packer, body_info_data, bus=2, ignition=4)
+
+      send_bdycm()
 
 
       def send_common():
         # removes airbag fault telltale
-        send_cmd(packer, rcm_status_message_2)  # 76
+        # send_cmd(packer, rcm_status_message_2, bus="HS2")  # 76
+
+        # if button_counter % 20 == 0:
+        #   print("BUTTON!")
+        #   print("BUTTON!")
+        #   print("BUTTON!")
+        #   print("BUTTON!")
+        #   print("BUTTON!")
+        # send_cmd(packer, steering_wheel_data2, bus="HS2", hud=True, ok=True)
+        # else:
+        #   send_cmd(packer, steering_wheel_data2)
+
+        # hud
+        # send_cmd(packer, accdata_2)  # 391
 
         # speed
         # send_cmd(packer, brake_sn_data_3)  # 119
@@ -178,7 +209,7 @@ if __name__ == "__main__":
         # send_cmd(packer, wheel_speed)  # 535
 
         # fuel
-        send_cmd(packer, powertrain_data_4, fuel=75, fuelwarn=4, fuelrange=0)  # 1060
+        # send_cmd(packer, powertrain_data_4, bus="HS1", fuel=75, fuelwarn=0, fuelrange=0)  # 1060
 
         # send_cmd(packer, cluster_info_3)  # 1076
         pass
@@ -196,40 +227,45 @@ if __name__ == "__main__":
 
       #   sleep(DELAY * 10)
 
-      addr = 946  # 0x3B2
-      send_data = bytearray([
-        0b01000000,   # XXXX---- ignition?
-                      # -----X-- running lights?
-                      # ------X- rear fog light
-                      # -------X door open
-        0b00000001,   # 0001---- is "turn key to start?"
-                      # ----1--- is needle backlight
-        0b00000000,
-        0b00010000,   # ???YYYYY backlight?
-        0b00000000,   # ----X--- right turn signal
-        0b00000000,
-        0b00001100,   # -X------ left turn signal
-                      # ----XX-- factory mode/transport mode
-                      # ------X- rear right door open
-                      # -------X rear left door open
-        0b00000000,   # --X----- driver door open
-                      # ---X---- passenger door open
-                      # -----X-- liftgate open
-                      # -------X front fog light
-      ])
-      print(data)
+      # addr = 946  # 0x3B2
+      # send_data = bytearray([
+      #   0b01000000,   #  7 XXXX---- ignition?
+      #                 #    -----X-- running lights?
+      #                 #    ------X- rear fog light
+      #                 #    -------X door open
+      #   0b00000000,   # 15 0001---- is "turn key to start?"
+      #                 #    ----XXXX needle backlight
+      #   0b00000000,   # 23
+      #   0b00010000,   # 31 ---YYYYY backlight?
+      #   0b00000000,   # 39 ----X--- right turn signal
+      #   0b00000000,   # 47
+      #   0b00000000,   # 55 -X------ left turn signal
+      #                 #    ----XX-- factory mode/transport mode
+      #                 #        11   transport mode
+      #                 #        10   ?
+      #                 #        01   factory mode
+      #                 #        00   ?
+      #                 #    ------X- rear right door open
+      #                 #    -------X rear left door open
+      #   0b00000000,   # 63 --X----- driver door open
+      #                 #    ---X---- passenger door open
+      #                 #    -----X-- liftgate open
+      #                 #    -------X front fog light
+      # ])
+      # print(data)
 
       while 1:
+        button_counter += 1
+
         # data += 1
         # if data == 256:
         #   data = 0
         # send_data = bytearray([data] * 8)
-        send_wakeup()
-        send_msg(addr, send_data)
+
+        # send_wakeup()
+        send_bdycm()
+        # send_msg(addr, send_data)
         send_common()
-        # send_cmd(packer, steering_wheel_data2, ok=True)
-        # sleep(DELAY*2)
-        # send_cmd(packer, steering_wheel_data2)
         sleep(DELAY * 10)
 
 
@@ -241,13 +277,16 @@ if __name__ == "__main__":
           print("skipping bookmarked", addr)
           continue
 
-        send_wakeup()
+        if idx % 25 == 0:
+          send_bdycm()
 
         send_msg(addr, send_data)
         sent.append(addr)
 
         count += 1
         if count == BATCH_SIZE or addr == idx + size - 1:
+          # send_wakeup()
+          send_bdycm()
           send_common()
           print(f"sent data {data:2X} in batch ({count}): {','.join(str(x) for x in sent)}")
           sent = []
