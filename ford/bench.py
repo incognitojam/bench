@@ -2,121 +2,61 @@
 from time import sleep
 from panda import Panda
 from opendbc.can.packer import CANPacker
-from opendbc.can.parser import CANParser
-from opendbc.can.tests.test_packer_parser import can_list_to_can_capnp
-from selfdrive.controls.lib import cluster
 
 from bench.ford.fordcan import *
 from bench.ford.values import *
 
 
-SIGNALS = [
- ("ValetMode_D_Mem", "BodyInfo_3_FD1", 0),
- ("DimmingLvlEvnt_No_Actl", "BodyInfo_3_FD1", 0),
- ("DrStatDrvErrCnt_B_Stat", "BodyInfo_3_FD1", 0),
- ("TurnLghtRight_D_Rq", "BodyInfo_3_FD1", 0),
- ("TurnLghtRightOn_B_Stat", "BodyInfo_3_FD1", 0),
- ("TurnLghtLeftOn_B_Stat", "BodyInfo_3_FD1", 0),
- ("FogLghtRearOn_B_Stat", "BodyInfo_3_FD1", 0),
- ("Backlit_LED_Status", "BodyInfo_3_FD1", 0),
- ("TurnLghtLeft_D_Rq", "BodyInfo_3_FD1", 0),
- ("FogLghtFrontOn_B_Stat", "BodyInfo_3_FD1", 0),
- ("IgnKeyType_D_Actl", "BodyInfo_3_FD1", 0),
- ("Parklamp_Status", "BodyInfo_3_FD1", 0),
- ("Litval", "BodyInfo_3_FD1", 0),
- ("Key_In_Ignition_Stat", "BodyInfo_3_FD1", 0),
- ("Ignition_Status", "BodyInfo_3_FD1", 0),
- ("Dimming_Lvl", "BodyInfo_3_FD1", 0),
- ("Day_Night_Status", "BodyInfo_3_FD1", 0),
- ("Remote_Start_Status", "BodyInfo_3_FD1", 0),
- ("DrStatTgate_B_Actl", "BodyInfo_3_FD1", 0),
- ("DrStatRr_B_Actl", "BodyInfo_3_FD1", 0),
- ("DrStatRl_B_Actl", "BodyInfo_3_FD1", 0),
- ("DrStatPsngr_B_Actl", "BodyInfo_3_FD1", 0),
- ("DrStatInnrTgate_B_Actl", "BodyInfo_3_FD1", 0),
- ("DrStatHood_B_Actl", "BodyInfo_3_FD1", 0),
- ("DrStatDrv_B_Actl", "BodyInfo_3_FD1", 0),
- ("PrkBrkActv_B_Actl", "BodyInfo_3_FD1", 0),
- ("LifeCycMde_D_Actl", "BodyInfo_3_FD1", 0),
- ("Delay_Accy", "BodyInfo_3_FD1", 0),
- ("CrashEvnt_D_Stat", "BodyInfo_3_FD1", 0),
- ("FuelPmpInhbt_B_Stat", "BodyInfo_3_FD1", 0),
- ("BodySrvcRqd_B_Rq", "BodyInfo_3_FD1", 0),
-]
-CHECKS = []
+class FordBench():
+  def __init__(self):
+    self.panda = Panda()
+    self.panda.can_clear(0xFFFF)
+    self.panda.set_safety_mode(Panda.SAFETY_ALLOUTPUT)
+    self.panda.set_heartbeat_disabled()
 
-
-if __name__ == "__main__":
-  packer = CANPacker(DBC_NAME)
-  # parser = CANParser(DBC_NAME, signals=SIGNALS, checks=CHECKS, enforce_checks=False)
-
-  # msgs = create_body_info_command(packer, key=1, ignition=4, backlight=4, dimming=12)
-  # msgs[2] =  b"\x41\x00\x00\x00\x4c\x00\xe0\x00"
-  # print("msgs:", msgs)
-
-  # BodyInfo_3_FD1, CGEA 1.3 wake up message
-  # msg = [947, 0, b"\x41\x00\x00\x00\x4c\x00\xe0\x00", 0]
-  # bts = can_list_to_can_capnp([msg])
-  # parser.update_string(bts)
-  # print(parser.vl["BodyInfo_3_FD1"])
-
-  # bds_values = parser.vl["BodyInfo_3_FD1"]
-  # bds_values["TurnLghtRightOn_B_Stat"] = 0
-  # bds_values["TurnLghtLeftOn_B_Stat"] = 0
-  # bds_values["DrStatTgate_B_Actl"] = 0
-  # bds_values["CrashEvnt_D_Stat"] = 0
-  # result = packer.make_can_msg("BodyInfo_3_FD1", 0, bds_values)
-  # print(f"result: {result[2]}")
-
-  # bdf_info_addr = 947
-  # bdy_info_data = b"\x40\x00\x00\x00\x40\x00\xa0\x00"
-
-  p = Panda()
-  p.can_clear(0xFFFF)
-  p.set_safety_mode(Panda.SAFETY_ALLOUTPUT)
-  p.set_heartbeat_disabled()
-
-  def send_cmd(packer, command, bus=None, **kwargs):
+  def send_cmd(self, packer, command, bus=None, **kwargs):
     addr, _, data, _ = command(packer, **kwargs)
     if bus is None:
       sent_bus = "0, 1, 2"
       for bus in (0, 1, 2):
         print(bus)
-        p.can_send(addr, data, bus)
+        self.panda.can_send(addr, data, bus)
     elif isinstance(bus, str):
       bus = BUS_MAP[bus]
       sent_bus = str(bus)
-      p.can_send(addr, data, bus)
+      self.panda.can_send(addr, data, bus)
     else:
       sent_bus = str(bus)
-      p.can_send(addr, data, bus)
+      self.panda.can_send(addr, data, bus)
     print(f"({addr})\t{command.__name__}\t\tbus {sent_bus}:\t\t{data}")
     sleep(DELAY)
 
-  def send_msg(addr, data):
+  def send_msg(self, addr, data):
     print(addr, data)
     for bus in (0, 1, 2):
-      p.can_send(addr, data, bus)
+      self.panda.can_send(addr, data, bus)
     print(f"{addr}\t sent on bus 0, 1, 2: {data}")
     sleep(DELAY)
 
-  send_cmd(packer, mc_send_signals_2)
+
+if __name__ == "__main__":
+  packer = CANPacker(DBC_NAME)
+
+  bench = FordBench()
+
+  bench.send_cmd(packer, mc_send_signals_2)
   # sys.exit(0)
 
-  print("Is white panda?", p.is_white())
+  print("Is white panda?", bench.panda.is_white())
 
   # while 1:
   #   p.can_send(bdf_info_addr, bdy_info_data, BUS)
   #   print(bdf_info_addr, bdy_info_data)
   #   sleep(0.008)
 
-  # bad_ranges = [
-  #   range(0, 500),
-  #   range(2000, 10000)
-  # ]
-
   # send_cmd(packer, mc_send_signals_2)
   # sys.exit(0)
+
 
   print("Sending commands...")
   try:
@@ -175,13 +115,8 @@ if __name__ == "__main__":
       sent = []
 
 
-      # def send_wakeup():
-      #   wake_up_addr = 1408
-      #   wake_up_data = b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
-      #   send_msg(wake_up_addr, wake_up_data)
-
       def send_bdycm():
-        send_cmd(packer, body_info_data, bus=2, ignition=4)
+        bench.send_cmd(packer, body_info_data, bus=2, ignition=4)
 
       send_bdycm()
 
@@ -262,7 +197,6 @@ if __name__ == "__main__":
         #   data = 0
         # send_data = bytearray([data] * 8)
 
-        # send_wakeup()
         send_bdycm()
         # send_msg(addr, send_data)
         send_common()
@@ -280,7 +214,7 @@ if __name__ == "__main__":
         if idx % 25 == 0:
           send_bdycm()
 
-        send_msg(addr, send_data)
+        bench.send_msg(addr, send_data)
         sent.append(addr)
 
         count += 1
@@ -310,4 +244,4 @@ if __name__ == "__main__":
   except Exception as e:
     print(e)
   finally:
-    p.close()
+    bench.panda.close()
