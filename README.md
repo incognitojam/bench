@@ -5,7 +5,7 @@ Using a [panda](https://comma.ai/shop/products/panda) from comma.ai, we can simu
 ## Systems
 
 - Ford Sync 3 infotainment unit (APIM)
-- Audi/VW/Skoda MIB
+- Audi/VW/Skoda MIB (soon tm)
 
 ## Credits
 
